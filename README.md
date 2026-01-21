@@ -52,7 +52,7 @@ Inspired by the minimal aesthetic of [paper.design](https://paper.design) with a
 
 ## How This Was Built
 
-See [PROMPTS.md](PROMPTS.md) for the full prompt sequence used to build this project with Claude Code CLI.
+See [PROMPTS.md](PROMPTS.md) for the full product requirements document that can be used to build this project with Claude Code CLI.
 
 ## License
 
