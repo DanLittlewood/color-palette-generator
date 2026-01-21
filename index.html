@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Palette Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @layer base {
+            :root {
+                --background: 38 18% 92%;
+                --foreground: 0 0% 5%;
+                --card: 0 0% 100%;
+                --card-foreground: 0 0% 5%;
+                --primary: 0 0% 5%;
+                --primary-foreground: 0 0% 98%;
+                --secondary: 38 18% 85%;
+                --secondary-foreground: 0 0% 5%;
+                --muted: 38 18% 88%;
+                --muted-foreground: 0 0% 40%;
+                --accent: 38 18% 80%;
+                --accent-foreground: 0 0% 5%;
+                --border: 38 18% 82%;
+                --input: 38 18% 82%;
+                --ring: 0 0% 5%;
+                --radius: 0.5rem;
+            }
+        }
+
+        body {
+            background-color: hsl(var(--background));
+            color: hsl(var(--foreground));
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        .card {
+            background-color: hsl(var(--card));
+            color: hsl(var(--card-foreground));
+            border: 1px solid hsl(var(--border));
+            border-radius: var(--radius);
+        }
+
+        .btn {
+            padding: 0.625rem 1.25rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            transition: all 0.15s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+        }
+
+        .btn-primary:hover {
+            opacity: 0.85;
+        }
+
+        .btn-secondary {
+            background-color: hsl(var(--secondary));
+            color: hsl(var(--secondary-foreground));
+            border-color: hsl(var(--border));
+        }
+
+        .btn-secondary:hover {
+            background-color: hsl(var(--accent));
+        }
+
+        .btn-accent {
+            background-color: hsl(var(--accent));
+            color: hsl(var(--accent-foreground));
+        }
+
+        .btn-accent:hover {
+            opacity: 0.85;
+        }
+
+        .drop-zone {
+            border: 2px dashed hsl(var(--border));
+            transition: all 0.2s;
+            background-color: hsl(var(--card));
+        }
+
+        .drop-zone.drag-over {
+            border-color: hsl(var(--primary));
+            background-color: hsl(var(--muted));
+        }
+
+        #imageViewer {
+            position: relative;
+            cursor: crosshair;
+        }
+
+        #imageViewer img {
+            display: block;
+            max-width: 100%;
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+        }
+
+        .harmony-btn {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius);
+            font-weight: 500;
+            font-size: 0.875rem;
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--card));
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .harmony-btn:hover {
+            background-color: hsl(var(--muted));
+        }
+
+        .harmony-btn.active {
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            border-color: hsl(var(--primary));
+        }
+
+        #colorInfo {
+            position: absolute;
+            background: hsl(var(--primary));
+            color: hsl(var(--primary-foreground));
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 11px;
+            font-weight: 500;
+            pointer-events: none;
+            z-index: 10;
+            display: none;
+            font-family: 'SF Mono', 'Monaco', 'Courier New', monospace;
+        }
+
+        .thumbnail {
+            width: 80px;
+            height: 80px;
+            object-fit: cover;
+            border-radius: var(--radius);
+            border: 2px solid hsl(var(--border));
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .thumbnail:hover {
+            border-color: hsl(var(--primary));
+            transform: scale(1.05);
+        }
+
+        .thumbnail.active {
+            border-color: hsl(var(--primary));
+            border-width: 3px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 0.625rem 0.875rem;
+            border-radius: var(--radius);
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--card));
+            color: hsl(var(--foreground));
+            font-size: 0.875rem;
+            transition: all 0.15s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: hsl(var(--ring));
+            box-shadow: 0 0 0 2px hsla(var(--ring) / 0.1);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-6 sm:p-12">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <header class="mb-12">
+            <h1 class="text-5xl sm:text-6xl font-bold tracking-tight mb-3">color picker</h1>
+            <p class="text-lg" style="color: hsl(var(--muted-foreground))">hover over your image to extract colors in real-time</p>
+        </header>
+
+        <!-- Upload Zone -->
+        <div id="uploadZone" class="mb-8">
+            <div id="dropZone" class="drop-zone rounded-lg p-16 sm:p-24 text-center cursor-pointer">
+                <svg class="mx-auto h-16 w-16 mb-4" style="color: hsl(var(--muted-foreground))" stroke="currentColor" fill="none" viewBox="0 0 48 48">
+                    <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                <p class="text-base mb-4" style="color: hsl(var(--muted-foreground))">drop an image or click to select</p>
+                <button id="loadUnsplashBtn" class="btn btn-primary">or load random photo</button>
+                <input type="file" id="fileInput" accept="image/*" class="hidden">
+            </div>
+        </div>
+
+        <!-- Main Content (hidden until image loaded) -->
+        <div id="mainContent" class="hidden">
+            <!-- Color Harmony Selector -->
+            <div class="mb-6 flex gap-2 items-center justify-between flex-wrap">
+                <div class="flex gap-2">
+                    <button class="harmony-btn active" data-harmony="analogous">Analogous</button>
+                    <button class="harmony-btn" data-harmony="complementary">Complementary</button>
+                    <button class="harmony-btn" data-harmony="triadic">Triadic</button>
+                </div>
+                <div class="flex gap-2">
+                    <button id="randomPhotoBtn" class="btn btn-secondary">Random Photo</button>
+                    <button id="uploadMoreBtn" class="btn btn-secondary">Upload Image</button>
+                    <button id="refreshBtn" class="btn btn-secondary">Reset</button>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <!-- Left Panel: Palette History -->
+                <div class="lg:col-span-3 space-y-4">
+                    <p class="text-xs font-medium uppercase tracking-wide" style="color: hsl(var(--muted-foreground))">Palette History</p>
+                    <div id="colorHistory" class="space-y-3">
+                        <p class="text-xs" style="color: hsl(var(--muted-foreground))">Click on the image to generate a palette</p>
+                    </div>
+                </div>
+
+                <!-- Center Panel: Image Selection Surface -->
+                <div class="lg:col-span-6">
+                    <div id="imageViewer" class="mb-4">
+                        <img id="viewerImg" alt="Interactive image">
+                        <div id="colorInfo"></div>
+                    </div>
+
+                    <!-- Thumbnail Gallery -->
+                    <div class="mb-4">
+                        <div id="thumbnailGallery" class="flex gap-2 flex-wrap"></div>
+                    </div>
+
+                    <!-- Current Hover Color -->
+                    <div class="flex items-center gap-3 mb-4">
+                        <div id="currentColor" class="w-10 h-10 rounded border" style="border-color: hsl(var(--border))"></div>
+                        <span id="currentColorText" class="text-sm font-mono" style="color: hsl(var(--muted-foreground))"></span>
+                    </div>
+
+                    <!-- Generated Palette -->
+                    <div id="generatedPalette" class="hidden">
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">Generated Palette</p>
+                        <div id="paletteDisplay" class="flex gap-2"></div>
+                    </div>
+                </div>
+
+                <!-- Right Panel: Component Preview -->
+                <div class="lg:col-span-3 space-y-6">
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">Buttons</p>
+                        <div class="flex flex-col gap-2">
+                            <button class="btn btn-primary">Primary</button>
+                            <button class="btn btn-secondary">Secondary</button>
+                            <button class="btn btn-accent">Accent</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">Card</p>
+                        <div class="card p-4">
+                            <h3 class="font-semibold mb-1 text-sm">Card Title</h3>
+                            <p class="text-xs" style="color: hsl(var(--muted-foreground))">Dynamic theming</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">Input</p>
+                        <input type="text" placeholder="Enter text..." class="input-field">
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">Badges</p>
+                        <div class="flex flex-col gap-2">
+                            <span class="badge" style="background: hsl(var(--primary)); color: hsl(var(--primary-foreground))">Primary</span>
+                            <span class="badge" style="background: hsl(var(--secondary)); color: hsl(var(--secondary-foreground))">Secondary</span>
+                            <span class="badge" style="background: hsl(var(--accent)); color: hsl(var(--accent-foreground))">Accent</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide mb-3" style="color: hsl(var(--muted-foreground))">CSS Variables</p>
+                        <div class="space-y-1.5 font-mono text-xs">
+                            <div class="flex justify-between">
+                                <span style="color: hsl(var(--muted-foreground))">--primary</span>
+                                <span id="primaryValue">0 0% 5%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span style="color: hsl(var(--muted-foreground))">--secondary</span>
+                                <span id="secondaryValue">38 18% 85%</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span style="color: hsl(var(--muted-foreground))">--accent</span>
+                                <span id="accentValue">38 18% 80%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="mt-16 pt-8 border-t" style="border-color: hsl(var(--border))">
+            <p class="text-sm text-center" style="color: hsl(var(--muted-foreground))">
+                Built with <a href="https://ui.shadcn.com" target="_blank" rel="noopener noreferrer" class="underline hover:no-underline" style="color: hsl(var(--foreground))">shadcn/ui</a>
+            </p>
+        </footer>
+    </div>
+
+    <canvas id="canvas" class="hidden"></canvas>
+
+    <script>
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadZone = document.getElementById('uploadZone');
+        const mainContent = document.getElementById('mainContent');
+        const imageViewer = document.getElementById('imageViewer');
+        const viewerImg = document.getElementById('viewerImg');
+        const colorInfo = document.getElementById('colorInfo');
+        const currentColor = document.getElementById('currentColor');
+        const currentColorText = document.getElementById('currentColorText');
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+
+        let currentHarmony = 'analogous';
+        let imageData = null;
+        let colorHistory = [];
+        const maxHistoryItems = 20;
+        let loadedImages = [];
+        let currentImageIndex = -1;
+
+        // Drag and drop handlers
+        dropZone.addEventListener('click', () => fileInput.click());
+
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('drag-over');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('drag-over');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                handleImage(file);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                handleImage(file);
+            }
+        });
+
+        function handleImage(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                loadImageFromUrl(e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function loadImageFromUrl(url) {
+            // Add to loaded images array
+            loadedImages.push(url);
+            currentImageIndex = loadedImages.length - 1;
+
+            // Set CORS to allow canvas pixel reading
+            viewerImg.crossOrigin = "anonymous";
+
+            // Set as main image
+            viewerImg.src = url;
+            viewerImg.onload = () => {
+                // Load image into canvas for pixel sampling
+                canvas.width = viewerImg.naturalWidth;
+                canvas.height = viewerImg.naturalHeight;
+                ctx.drawImage(viewerImg, 0, 0);
+
+                try {
+                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                } catch (error) {
+                    console.error('CORS error loading image:', error);
+                    alert('Unable to load image for color picking due to CORS restrictions. Try uploading a local image instead.');
+                    return;
+                }
+
+                // Show main content, hide upload
+                uploadZone.classList.add('hidden');
+                mainContent.classList.remove('hidden');
+
+                // Update thumbnail gallery
+                renderThumbnails();
+            };
+
+            viewerImg.onerror = () => {
+                console.error('Error loading image from:', url);
+                alert('Failed to load image. Please try uploading a local image instead.');
+            };
+        }
+
+        function renderThumbnails() {
+            const gallery = document.getElementById('thumbnailGallery');
+            gallery.innerHTML = loadedImages.map((imgUrl, index) => `
+                <img
+                    src="${imgUrl}"
+                    class="thumbnail ${index === currentImageIndex ? 'active' : ''}"
+                    onclick="switchToImage(${index})"
+                    alt="Thumbnail ${index + 1}"
+                >
+            `).join('');
+        }
+
+        window.switchToImage = function(index) {
+            currentImageIndex = index;
+            const url = loadedImages[index];
+
+            viewerImg.crossOrigin = "anonymous";
+            viewerImg.src = url;
+            viewerImg.onload = () => {
+                canvas.width = viewerImg.naturalWidth;
+                canvas.height = viewerImg.naturalHeight;
+                ctx.drawImage(viewerImg, 0, 0);
+
+                try {
+                    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                } catch (error) {
+                    console.error('CORS error:', error);
+                }
+
+                renderThumbnails();
+            };
+        };
+
+        // Load random photo using Picsum Photos (free, no API key required)
+        function loadInitialPhoto() {
+            // Picsum Photos provides free high-quality random images
+            // Using truly random ID from larger range (0-1084 available)
+            const randomId = Math.floor(Math.random() * 1084);
+            // Add timestamp to prevent caching
+            const picsumUrl = `https://picsum.photos/id/${randomId}/1200/800?t=${Date.now()}`;
+            console.log('Loading photo ID:', randomId);
+            loadImageFromUrl(picsumUrl);
+        }
+
+        // Load Unsplash button in upload zone
+        document.getElementById('loadUnsplashBtn').addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('Loading random photo...');
+            loadInitialPhoto();
+        });
+
+        // Random photo button in toolbar
+        document.getElementById('randomPhotoBtn').addEventListener('click', () => {
+            loadInitialPhoto();
+        });
+
+        // Upload more button
+        document.getElementById('uploadMoreBtn').addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Color picking on hover
+        imageViewer.addEventListener('mousemove', (e) => {
+            if (!imageData) return;
+
+            const rect = viewerImg.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Convert to image coordinates
+            const scaleX = canvas.width / viewerImg.width;
+            const scaleY = canvas.height / viewerImg.height;
+            const imgX = Math.floor(x * scaleX);
+            const imgY = Math.floor(y * scaleY);
+
+            if (imgX >= 0 && imgX < canvas.width && imgY >= 0 && imgY < canvas.height) {
+                const pixelIndex = (imgY * canvas.width + imgX) * 4;
+                const r = imageData.data[pixelIndex];
+                const g = imageData.data[pixelIndex + 1];
+                const b = imageData.data[pixelIndex + 2];
+
+                const hsl = rgbToHsl(r, g, b);
+
+                // Update current color display
+                currentColor.style.backgroundColor = `rgb(${r}, ${g}, ${b})`;
+                currentColorText.textContent = `HSL(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+                // Show color info tooltip
+                colorInfo.style.display = 'block';
+                colorInfo.style.left = `${e.clientX - rect.left + 10}px`;
+                colorInfo.style.top = `${e.clientY - rect.top + 10}px`;
+                colorInfo.textContent = `HSL(${hsl.h}, ${hsl.s}%, ${hsl.l}%)`;
+
+                // Update theme in real-time
+                updateTheme(hsl);
+            }
+        });
+
+        imageViewer.addEventListener('mouseleave', () => {
+            colorInfo.style.display = 'none';
+        });
+
+        // Track last selected HSL for harmony mode switching
+        let lastSelectedHsl = null;
+
+        // Click to generate palette
+        imageViewer.addEventListener('click', (e) => {
+            if (!imageData) return;
+
+            const rect = viewerImg.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            const scaleX = canvas.width / viewerImg.width;
+            const scaleY = canvas.height / viewerImg.height;
+            const imgX = Math.floor(x * scaleX);
+            const imgY = Math.floor(y * scaleY);
+
+            if (imgX >= 0 && imgX < canvas.width && imgY >= 0 && imgY < canvas.height) {
+                const pixelIndex = (imgY * canvas.width + imgX) * 4;
+                const r = imageData.data[pixelIndex];
+                const g = imageData.data[pixelIndex + 1];
+                const b = imageData.data[pixelIndex + 2];
+                const hsl = rgbToHsl(r, g, b);
+
+                lastSelectedHsl = hsl;
+                const palette = generatePalette(hsl);
+                displayGeneratedPalette(palette);
+                applyPaletteToTheme(palette);
+                addToColorHistory(palette);
+            }
+        });
+
+        function generatePalette(baseHsl) {
+            const { h, s, l } = baseHsl;
+            const palette = {
+                harmony: currentHarmony,
+                colors: []
+            };
+
+            switch (currentHarmony) {
+                case 'analogous':
+                    palette.colors = [
+                        { h: (h - 30 + 360) % 360, s, l, name: 'analogous-1' },
+                        { h: h, s, l, name: 'base' },
+                        { h: (h + 30) % 360, s, l, name: 'analogous+1' },
+                        { h: (h + 60) % 360, s, l, name: 'analogous+2' },
+                        { h: (h - 60 + 360) % 360, s, l, name: 'analogous-2' }
+                    ];
+                    break;
+                case 'complementary':
+                    palette.colors = [
+                        { h: h, s, l, name: 'base' },
+                        { h: (h + 180) % 360, s, l, name: 'complement' },
+                        { h: h, s: Math.max(s - 20, 20), l: Math.min(l + 20, 90), name: 'base-light' },
+                        { h: (h + 180) % 360, s: Math.max(s - 20, 20), l: Math.min(l + 20, 90), name: 'complement-light' },
+                        { h: h, s, l: Math.max(l - 20, 10), name: 'base-dark' }
+                    ];
+                    break;
+                case 'triadic':
+                    palette.colors = [
+                        { h: h, s, l, name: 'base' },
+                        { h: (h + 120) % 360, s, l, name: 'triadic+120' },
+                        { h: (h + 240) % 360, s, l, name: 'triadic+240' },
+                        { h: h, s: Math.max(s - 30, 15), l: Math.min(l + 25, 92), name: 'base-muted' },
+                        { h: (h + 120) % 360, s: Math.max(s - 30, 15), l: Math.min(l + 25, 92), name: 'triadic-muted' }
+                    ];
+                    break;
+            }
+
+            return palette;
+        }
+
+        function displayGeneratedPalette(palette) {
+            const paletteContainer = document.getElementById('generatedPalette');
+            const paletteDisplay = document.getElementById('paletteDisplay');
+
+            paletteDisplay.innerHTML = palette.colors.map((color, index) => `
+                <div class="flex-1">
+                    <div class="h-20 rounded border" style="background-color: hsl(${color.h}, ${color.s}%, ${color.l}%); border-color: hsl(var(--border))"></div>
+                    <p class="text-xs mt-1 font-mono text-center" style="color: hsl(var(--muted-foreground))">${color.h}°</p>
+                </div>
+            `).join('');
+
+            paletteContainer.classList.remove('hidden');
+        }
+
+        function applyPaletteToTheme(palette) {
+            const colors = palette.colors;
+
+            // Apply first color as primary
+            const primary = colors[0];
+            document.documentElement.style.setProperty('--primary', `${primary.h} ${primary.s}% ${primary.l}%`);
+            document.documentElement.style.setProperty('--primary-foreground', `${primary.h} ${primary.s}% ${primary.l > 50 ? 10 : 98}%`);
+            document.documentElement.style.setProperty('--ring', `${primary.h} ${primary.s}% ${primary.l}%`);
+
+            // Apply second color as secondary
+            const secondary = colors[1] || colors[0];
+            document.documentElement.style.setProperty('--secondary', `${secondary.h} ${Math.min(secondary.s, 40)}% ${Math.max(secondary.l, 85)}%`);
+            document.documentElement.style.setProperty('--secondary-foreground', `${primary.h} ${primary.s}% ${primary.l}%`);
+
+            // Apply third color as accent
+            const accent = colors[2] || colors[0];
+            document.documentElement.style.setProperty('--accent', `${accent.h} ${accent.s}% ${Math.min(accent.l + 10, 90)}%`);
+            document.documentElement.style.setProperty('--accent-foreground', `${accent.h} ${accent.s}% ${accent.l > 50 ? 10 : 20}%`);
+
+            // Update display values
+            document.getElementById('primaryValue').textContent = `${primary.h} ${primary.s}% ${primary.l}%`;
+            document.getElementById('secondaryValue').textContent = `${secondary.h} ${Math.min(secondary.s, 40)}% ${Math.max(secondary.l, 85)}%`;
+            document.getElementById('accentValue').textContent = `${accent.h} ${accent.s}% ${Math.min(accent.l + 10, 90)}%`;
+        }
+
+        function addToColorHistory(palette) {
+            colorHistory.unshift(palette);
+            if (colorHistory.length > maxHistoryItems) {
+                colorHistory.pop();
+            }
+            renderColorHistory();
+        }
+
+        function renderColorHistory() {
+            const historyContainer = document.getElementById('colorHistory');
+
+            if (colorHistory.length === 0) {
+                historyContainer.innerHTML = '<p class="text-xs" style="color: hsl(var(--muted-foreground))">Click on the image to generate a palette</p>';
+                return;
+            }
+
+            historyContainer.innerHTML = colorHistory.map((palette, index) => `
+                <div class="p-2 rounded cursor-pointer hover:bg-white/50 transition-colors" onclick="applyHistoryPalette(${index})">
+                    <div class="flex gap-1 mb-1">
+                        ${palette.colors.slice(0, 5).map(color => `
+                            <div class="flex-1 h-8 rounded" style="background-color: hsl(${color.h}, ${color.s}%, ${color.l}%)"></div>
+                        `).join('')}
+                    </div>
+                    <p class="text-xs" style="color: hsl(var(--muted-foreground))">${palette.harmony}</p>
+                </div>
+            `).join('');
+        }
+
+        window.applyHistoryPalette = function(index) {
+            const palette = colorHistory[index];
+            displayGeneratedPalette(palette);
+            applyPaletteToTheme(palette);
+        };
+
+        function rgbToHsl(r, g, b) {
+            r /= 255;
+            g /= 255;
+            b /= 255;
+            const max = Math.max(r, g, b);
+            const min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+
+            return {
+                h: Math.round(h * 360),
+                s: Math.round(s * 100),
+                l: Math.round(l * 100)
+            };
+        }
+
+        function updateTheme(baseHsl) {
+            const { h, s, l } = baseHsl;
+
+            // Primary color (sampled color)
+            document.documentElement.style.setProperty('--primary', `${h} ${s}% ${l}%`);
+            document.documentElement.style.setProperty('--primary-foreground', `${h} ${s}% ${l > 50 ? 10 : 98}%`);
+            document.documentElement.style.setProperty('--ring', `${h} ${s}% ${l}%`);
+
+            // Calculate secondary and accent based on harmony
+            let secondaryH, accentH;
+
+            switch (currentHarmony) {
+                case 'analogous':
+                    secondaryH = (h + 30) % 360;
+                    accentH = (h - 30 + 360) % 360;
+                    break;
+                case 'complementary':
+                    secondaryH = (h + 180) % 360;
+                    accentH = (h + 180) % 360;
+                    break;
+                case 'triadic':
+                    secondaryH = (h + 120) % 360;
+                    accentH = (h + 240) % 360;
+                    break;
+            }
+
+            // Secondary color
+            document.documentElement.style.setProperty('--secondary', `${secondaryH} ${Math.min(s, 40)}% ${Math.max(l, 85)}%`);
+            document.documentElement.style.setProperty('--secondary-foreground', `${h} ${s}% ${l}%`);
+
+            // Accent color
+            document.documentElement.style.setProperty('--accent', `${accentH} ${s}% ${Math.min(l + 10, 90)}%`);
+            document.documentElement.style.setProperty('--accent-foreground', `${accentH} ${s}% ${l > 50 ? 10 : 20}%`);
+
+            // Update display values
+            document.getElementById('primaryValue').textContent = `${h} ${s}% ${l}%`;
+            document.getElementById('secondaryValue').textContent = `${secondaryH} ${Math.min(s, 40)}% ${Math.max(l, 85)}%`;
+            document.getElementById('accentValue').textContent = `${accentH} ${s}% ${Math.min(l + 10, 90)}%`;
+        }
+
+        // Harmony selection
+        document.querySelectorAll('.harmony-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.harmony-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentHarmony = btn.dataset.harmony;
+
+                // If we have a palette already, regenerate with new harmony and save to history
+                if (lastSelectedHsl) {
+                    const palette = generatePalette(lastSelectedHsl);
+                    displayGeneratedPalette(palette);
+                    applyPaletteToTheme(palette);
+                    addToColorHistory(palette);
+                }
+            });
+        });
+
+        // Refresh button
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            // Clear color history
+            colorHistory = [];
+            lastSelectedHsl = null;
+            renderColorHistory();
+
+            // Hide generated palette
+            document.getElementById('generatedPalette').classList.add('hidden');
+
+            // Reset to default theme
+            resetTheme();
+
+            // Clear current color display
+            currentColor.style.backgroundColor = 'transparent';
+            currentColorText.textContent = '';
+        });
+
+        function resetTheme() {
+            document.documentElement.style.setProperty('--primary', '0 0% 5%');
+            document.documentElement.style.setProperty('--primary-foreground', '0 0% 98%');
+            document.documentElement.style.setProperty('--secondary', '38 18% 85%');
+            document.documentElement.style.setProperty('--secondary-foreground', '0 0% 5%');
+            document.documentElement.style.setProperty('--accent', '38 18% 80%');
+            document.documentElement.style.setProperty('--accent-foreground', '0 0% 5%');
+            document.documentElement.style.setProperty('--ring', '0 0% 5%');
+
+            // Update display values
+            document.getElementById('primaryValue').textContent = '0 0% 5%';
+            document.getElementById('secondaryValue').textContent = '38 18% 85%';
+            document.getElementById('accentValue').textContent = '38 18% 80%';
+        }
+    </script>
+</body>
+</html>
