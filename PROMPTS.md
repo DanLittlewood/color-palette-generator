@@ -1,105 +1,131 @@
-# Build Prompts
+# Product Requirements Document
 
-This project was built using Claude Code CLI. Here's the prompt sequence to recreate it:
+Use this PRD to build a similar color palette generator with Claude Code CLI.
 
-## Initial Setup
+## Overview
 
-```
-I want to update the website to have a few things. I essentially want to have a site
-that looks at an image and gives you a color palette in real time. and as you are
-dragging a picker, you can see the shadcn/ui update in real time.
-```
+Build a real-time color palette generator that extracts colors from images and displays them applied to live UI components.
 
-## Refining the Flow
+## Core Features
 
-```
-I just want the image viewer, and a dropper to drag around. I want the dropper to,
-in realtime, adjust the shadcn UI toolkit. so, the flow is essentially, i upload an
-image, it becomes a surface where I can use a picker, hover over portions of the
-image, and see the color palette change in the UI toolkit.
-```
+### 1. Image Loading
+- **Upload**: Drag-and-drop or click to upload images
+- **Random Photos**: Button to load random photos from a free API (Picsum Photos)
+- **Thumbnail Gallery**: Display all loaded images as clickable thumbnails below the main viewer
+- **Image Switching**: Click any thumbnail to make it the active selection surface
 
-## Adding Color Harmonies
+### 2. Color Picking Interface
+- **Hover Preview**: As user hovers over the image, display the current pixel color in real-time
+- **Click to Generate**: Clicking on the image generates a complete color palette (not just a single color)
+- **Color Info Tooltip**: Show HSL values that follow the cursor while hovering
 
-```
-I will also want to add in 3 standard color selections, like analogous, etc.
-you pick three.
-```
+### 3. Color Harmony Modes
+Generate palettes using three harmony algorithms:
+- **Analogous**: Colors adjacent on the color wheel (±30°, ±60°)
+- **Complementary**: Base color + opposite color + light/dark variations
+- **Triadic**: Three evenly spaced colors (120° apart) + muted variations
 
-**Result:** Analogous, Complementary, Triadic harmony modes
+**Behavior**: Switching harmony modes regenerates the palette from the last selected color and saves it to history.
 
-## Layout Refinement
+### 4. Three-Panel Layout
 
-```
-I want the middle surface as the selection surface. the right will be for me to
-view the toolkit change. the left will be a place where I can see past color
-selections.
-```
+**Left Panel: Palette History**
+- Display previously generated palettes as thumbnail strips
+- Show harmony mode label for each palette
+- Click any palette to reapply it
+- Store up to 20 palettes
 
-## Palette Generation
+**Center Panel: Image Selection Surface**
+- Main image viewer with crosshair cursor
+- Current color display with HSL values
+- Generated palette display (5 colors with hue values)
+- Thumbnail gallery below
 
-```
-I want it to spawn a color palette when I pick one color. when I select, it should
-provide a whole palette.
-```
+**Right Panel: Live Component Preview**
+- Display shadcn/ui components that update in real-time:
+  - Primary, Secondary, Accent buttons
+  - Card component
+  - Input field
+  - Badges
+  - CSS variable values
 
-```
-analogous, complementary, triadic needs to update the selected palette based on
-that color profile definition.
-```
+### 5. Toolbar Controls
+- **Harmony Mode Buttons**: Analogous, Complementary, Triadic
+- **Random Photo**: Load new random image
+- **Upload Image**: Add more images
+- **Reset**: Clear history and reset to default theme
 
-## Design Polish
+## Design Requirements
 
-```
-Ill want a simplified version of this. again, use shadcn for everything right now:
-https://paper.design/
-```
+### Visual Style
+- Inspired by paper.design aesthetic
+- Cream/off-white background (#edebe1)
+- Minimal, clean layout
+- Subtle borders and shadows
+- System font stack
 
-## Additional Features
+### Component Library
+- Use shadcn/ui design system principles
+- CSS custom properties for theming
+- Tailwind CSS for utility styling
 
-```
-I need a refresh button also so I can reset my color selections
-```
+### Responsive Behavior
+- Three-column layout on desktop (lg breakpoint)
+- Stack vertically on mobile
+- All controls accessible on small screens
 
-```
-keep the image uploader but have it seed an image from a photo of the day from like
-national geographic. for every photo coming from there - keep it as a thumbnail
-below the selected image
-```
+## Technical Requirements
 
-```
-when i use a random image, and it selects the image, and I go into color picker
-mode, i want to have a button next to reset and random and upload
-```
+### Implementation
+- Single HTML file with embedded CSS and JavaScript
+- No build process required
+- Tailwind CSS via CDN
+- Canvas API for pixel color extraction
+- CORS-enabled image loading
 
-```
-link shadcn in the footer so that people can see it
-```
+### Color Processing
+- RGB to HSL conversion
+- Dynamic palette generation based on harmony rules
+- Real-time CSS custom property updates
+- Proper foreground color calculation (light/dark contrast)
 
-## Key Principles
+### Image Handling
+- Support drag-and-drop upload
+- Load external images with CORS support
+- Canvas-based pixel sampling
+- Thumbnail generation and gallery management
 
-- **Start simple**: Basic functionality first (image + color picker)
-- **Iterate quickly**: Add features one at a time
-- **Be specific**: Describe the exact flow you want
-- **Reference designs**: Link to sites with the aesthetic you want
-- **Test as you go**: Verify each feature works before adding more
+## User Flow
 
-## Tech Stack Used
+1. **Initial State**: Upload zone with "load random photo" option
+2. **Image Loaded**: Main interface appears with three panels
+3. **Color Exploration**: Hover over image to preview colors
+4. **Palette Generation**: Click to generate and save palette
+5. **Mode Switching**: Change harmony modes to see variations
+6. **History Management**: View and reapply saved palettes
+7. **Multi-Image**: Load more images via random or upload buttons
 
-- Pure HTML/CSS/JavaScript (single file)
-- Tailwind CSS (via CDN)
-- shadcn/ui design system
-- Canvas API for color extraction
-- Picsum Photos API (free, no key required)
+## Footer
 
-## Tips for Using This Approach
+- Credit shadcn/ui with link to https://ui.shadcn.com
+- Minimal styling to match overall aesthetic
 
-1. **Start with the core feature** - In this case: "pick colors from image"
-2. **Add UI polish gradually** - Layout → styling → animations
-3. **Request specific changes** - "Left panel for history" vs "add a sidebar"
-4. **Reference real sites** - Linking to paper.design gave clear design direction
-5. **Iterate on features** - Single color → full palette → harmony modes
+## API Integration
+
+Use **Picsum Photos** (https://picsum.photos):
+- Free, no API key required
+- Random high-quality images
+- Reliable CORS support
+- URL format: `https://picsum.photos/id/{random}/1200/800`
 
 ---
 
-Want to build something similar? Start with the first prompt and work your way down!
+## How to Use This PRD
+
+Copy this entire document and paste it into Claude Code CLI with:
+
+```
+Build this application following the PRD in a single HTML file.
+```
+
+Then iterate on specific features or styling as needed.
