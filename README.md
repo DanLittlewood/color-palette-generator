@@ -2,10 +2,6 @@
 
 A real-time color palette generator that lets you extract colors from images and see them applied instantly to shadcn/ui components.
 
-![Screenshot](screenshot.png)
-
-> **Note:** Screenshot will appear once you add `screenshot.png` to the repo. See [SCREENSHOT.md](SCREENSHOT.md) for instructions.
-
 ## Features
 
 - **Interactive Color Picker** - Hover over any image to preview colors in real-time
