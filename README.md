@@ -42,10 +42,6 @@ A real-time color palette generator that lets you extract colors from images and
 - [Picsum Photos](https://picsum.photos) for random images
 - Canvas API for pixel color extraction
 
-## Design
-
-Inspired by the minimal aesthetic of [paper.design](https://paper.design) with a cream/off-white color palette.
-
 ## License
 
 MIT
